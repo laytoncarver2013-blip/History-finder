@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>History Finder</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f0e8;
+      color: #222;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 38px;
+      margin-bottom: 5px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+    }
+
+    .search-box {
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 3px 10px #0002;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 13px;
+      font-size: 17px;
+      border: 1px solid #aaa;
+      border-radius: 8px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 12px;
+      padding: 13px;
+      font-size: 17px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      background: #333;
+      color: white;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    #results {
+      margin-top: 25px;
+    }
+
+    .card {
+      background: white;
+      margin-bottom: 15px;
+      padding: 18px;
+      border-radius: 12px;
+      box-shadow: 0 2px 7px #0002;
+    }
+
+    .card h2 {
+      margin-top: 0;
+    }
+
+    .event {
+      padding: 12px 0;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .event:last-child {
+      border-bottom: none;
+    }
+
+    .year {
+      font-weight: bold;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 20px;
+    }
+
+    .error {
+      background: #ffe1e1;
+      padding: 15px;
+      border-radius: 10px;
+    }
+
+    a {
+      color: #2457a6;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>📜 History Finder</h1>
+
+    <div class="subtitle">
+      Discover what happened on any date in history.
+    </div>
+
+    <div class="search-box">
+
+      <label for="date">Choose a date:</label>
+
+      <input type="date" id="date">
+
+      <button onclick="searchHistory()">
+        🔎 Search History
+      </button>
+
+    </div>
+
+    <div id="results"></div>
+
+  </div>
+
+  <script>
+
+    async function searchHistory() {
+
+      const dateInput = document.getElementById("date");
+      const results = document.getElementById("results");
+
+      if (!dateInput.value) {
+        results.innerHTML =
+          '<div class="error">Please choose a date first.</div>';
+        return;
+      }
+
+      const [year, month, day] = dateInput.value.split("-");
+
+      results.innerHTML =
+        '<div class="loading">Loading history... 📚</div>';
+
+      try {
+
+        const url =
+          `https://en.wikipedia.org/api/rest_v1/feed/onthisday/all/${month}/${day}`;
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+          throw new Error("Could not load the history.");
+        }
+
+        const data = await response.json();
+
+        let html = `
+          <div class="card">
+            <h2>📅 History on ${month}/${day}</h2>
+        `;
+
+        if (data.events && data.events.length > 0) {
+
+          html += `<h3>🏛️ Historical Events</h3>`;
+
+          data.events.slice(0, 15).forEach(event => {
+
+            html += `
+              <div class="event">
+                <span class="year">${event.year}</span>
+                — ${event.text}
+              </div>
+            `;
+
+          });
+
+        } else {
+
+          html += "<p>No events were found.</p>";
+
+        }
+
+        html += `
+          </div>
+          <div class="card">
+            <p>
+              Information provided by
+              <a href="https://www.wikipedia.org/" target="_blank">
+                Wikipedia
+              </a>.
+            </p>
+          </div>
+        `;
+
+        results.innerHTML = html;
+
+      } catch (error) {
+
+        results.innerHTML = `
+          <div class="error">
+            Something went wrong while loading the history.
+            <br><br>
+            Please try again.
+          </div>
+        `;
+
+      }
+
+    }
+
+  </script>
+
+</body>
+</html>
